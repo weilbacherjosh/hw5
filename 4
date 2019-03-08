@@ -1,0 +1,154 @@
+%% Action Potential (adopted from example7_5.m, Dunn)
+% Simulation of the Hodgkin-Huxley model
+% Modifed by S.N. Ghadiali
+% March 1 2015
+% Edited by D.J. Hansford
+% March 3, 2016
+% Edited by D.J. Hansford March 1, 2017
+
+clc; clear all; close all;
+% warning off MATLAB:divideByZero   % This is only necessary for V=10mV
+
+%% Evaluate rate constants at resting membrane potential (V=0)
+% Call rate_constant function 
+% Evaluating the initial conditions for gating variables
+v=0; 
+% NOTE: this model uses shifted potentials, with the membrane resting
+% potential =-65mV, so results need to be modified to match this shift
+
+% Evaluate the alpha and beta gating variables at V=0 (really -65mV)
+[alpha_n,beta_n,alpha_m,beta_m,alpha_h,beta_h]=rate_constants(v);
+% Evaluate the n, m, h_infinity values from V=0 constants
+n_ss=alpha_n./(alpha_n+beta_n);
+m_ss=alpha_m./(alpha_m+beta_m);
+h_ss=alpha_h./(alpha_h+beta_h);
+
+% Display calculated gating variables for V=0mV
+fprintf('\n The alpha and beta values for the gating rate constants are:') 
+fprintf('\n alpha_n= %5.4g \n beta_n= %5.4g \n alpha_m= %5.4g \n beta_m= %5.4g \n alpha_h= %5.4g \n beta_h= %5.4g ', alpha_n, beta_n, alpha_m, beta_m, alpha_h, beta_h)
+disp(' ')
+
+fprintf('\n The following initial conditions of the gating variables are used:') 
+fprintf('\n n_ss= %5.4g \n m_ss= %5.4g \n h_ss= %5.4g ', n_ss,m_ss,h_ss)
+fprintf('\n These are the resting steady state values of these variables (when v=0).')
+disp(' ')
+
+%% Evaluate the differential equations
+% Order of y variable vector: stimulus voltage, n_inf, m_inf, h_inf
+% Evaluate results for 8mV stimulus (really -57mV)
+
+yzero=[8,n_ss,m_ss,h_ss];     % Calling 8 mV the baseline (_0 for time and ap)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
+tspan=[0:0.1:75];
+[t,y]=ode45(@hodgkin_huxley_equations,tspan,yzero);
+t0=t;               % Save results to separate time array
+ap0=y(:,1)-65;      % Save results to matching voltage array
+
+% Evaluate the conductances from differential equation solutions
+ggK=36; ggNa=120;   % Constants in conductance equations
+gK=ggK*y(:,2).^4; gNa=ggNa*y(:,3).^3.*y(:,4);
+% Plot the results
+clf; figure(1); plot(t,y(:,1)-65,'k'); % Note that potential is shifted by
+% -65mV to match the H-H model with shifted potentials
+title('Time Profile of Membrane Potential in Nerve Cells')
+xlabel('Time (ms)'); ylabel('Potential (mV)')
+figure(2); plot(t,y(:,2:4));
+title('Time Profiles of Gating Variables')
+xlabel('Time (ms)'); ylabel('Gating variables')
+text(7,0.6,'\leftarrow n(t)'); text(4.5,0.9,'\leftarrow m(t)'); 
+text(7,0.25,'\leftarrow h(t)')
+figure(3); plot(t,gK,t,gNa);
+title('Time Profiles of Conductances')
+xlabel('Time (ms)'); ylabel('Conductances')
+text(7,6,'\leftarrow g _K'); text(3.6,25,'\leftarrow g _{Na}'); 
+
+
+%% Evaluate the differential equations ggk 
+% Order of y variable vector: stimulus voltage, n_inf, m_/inf, h_inf
+% Evaluate results for 8mV stimulus (really -57mV)
+
+yzero=[8,n_ss,m_ss,h_ss];     % Calling 8 mV the baseline (_0 for time and ap)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
+tspan=[0:0.1:75];
+[t,y]=ode45(@hodgkin_huxley_equations,tspan,yzero);
+t0=t;               % Save results to separate time array
+ap0=y(:,1)-65;      % Save results to matching voltage array
+
+% Evaluate the conductances from differential equation solutions
+ggK=36; ggNa=120; 
+ggK1=ggK*.5;
+ggK2=ggK*.25;
+ggK3=ggK*0;% Constants in conductance equations
+gK=ggK*y(:,2).^4; gNa=ggNa*y(:,3).^3.*y(:,4);
+gK1=ggK1*y(:,2).^4; gK2=ggK2*y(:,2).^4; gK3=ggK3*y(:,2).^4;
+
+% Plot the results
+figure(4); plot(t,y(:,1)-65,'k'); % Note that potential is shifted by
+% -65mV to match the H-H model with shifted potentials
+title('Time Profile of Membrane Potential in Nerve Cells')
+xlabel('Time (ms)'); ylabel('Potential (mV)')
+
+figure(5);
+subplot(2,2,1);
+plot(t,gK,t,gNa);
+title('Time Profiles of Conductances ggK 100%')
+xlabel('Time (ms)'); ylabel('Conductances')
+text(7,6,'\leftarrow g _K'); text(3.6,25,'\leftarrow g _{Na}'); 
+subplot(2,2,2);
+plot(t,gK1,t,gNa);
+title('Time Profiles of Conductances ggK 50%')
+xlabel('Time (ms)'); ylabel('Conductances')
+text(7,6,'\leftarrow g _K'); text(3.6,25,'\leftarrow g _{Na}'); 
+subplot(2,2,3);
+plot(t,gK2,t,gNa);
+title('Time Profiles of Conductances ggK 25%')
+xlabel('Time (ms)'); ylabel('Conductances')
+text(7,6,'\leftarrow g _K'); text(3.6,25,'\leftarrow g _{Na}'); 
+subplot(2,2,4);
+plot(t,gK3,t,gNa);
+title('Time Profiles of Conductances ggK 0%')
+xlabel('Time (ms)'); ylabel('Conductances')
+text(7,6,'\leftarrow g _K'); text(3.6,25,'\leftarrow g _{Na}'); 
+
+%% Evaluate the differential equations ggN
+% Order of y variable vector: stimulus voltage, n_inf, m_/inf, h_inf
+% Evaluate results for 8mV stimulus (really -57mV)
+
+yzero=[8,n_ss,m_ss,h_ss];     % Calling 8 mV the baseline (_0 for time and ap)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
+tspan=[0:0.1:75];
+[t,y]=ode45(@hodgkin_huxley_equations,tspan,yzero);
+t0=t;               % Save results to separate time array
+ap0=y(:,1)-65;      % Save results to matching voltage array
+
+% Evaluate the conductances from differential equation solutions
+ggK=36; ggNa=120; 
+ggNa1=ggNa*.5;
+ggNa2=ggNa*.25;
+ggNa3=ggNa*0;% Constants in conductance equations
+gK=ggK*y(:,2).^4; gNa=ggNa*y(:,3).^3.*y(:,4);
+gNa1=ggNa1*y(:,2).^4; gNa2=ggNa2*y(:,2).^4; gNa3=ggNa3*y(:,2).^4;
+
+% Plot the results
+%figure(4); plot(t,y(:,1)-65,'k'); % Note that potential is shifted by
+% -65mV to match the H-H model with shifted potentials
+%title('Time Profile of Membrane Potential in Nerve Cells')
+%xlabel('Time (ms)'); ylabel('Potential (mV)')
+
+figure(6);
+subplot(2,2,1);
+plot(t,gK,t,gNa);
+title('Time Profiles of Conductances ggNa 100%')
+xlabel('Time (ms)'); ylabel('Conductances')
+text(7,6,'\leftarrow g _K'); text(3.6,25,'\leftarrow g _{Na}'); 
+subplot(2,2,2);
+plot(t,gK,t,gNa1);
+title('Time Profiles of Conductances ggNa 50%')
+xlabel('Time (ms)'); ylabel('Conductances')
+text(7,6,'\leftarrow g _K'); text(3.6,25,'\leftarrow g _{Na}'); 
+subplot(2,2,3);
+plot(t,gK,t,gNa2);
+title('Time Profiles of Conductances ggK 25%')
+xlabel('Time (ms)'); ylabel('Conductances')
+text(7,6,'\leftarrow g _K'); text(3.6,25,'\leftarrow g _{Na}'); 
+subplot(2,2,4);
+plot(t,gK,t,gNa3);
+title('Time Profiles of Conductances ggNa 0%')
+xlabel('Time (ms)'); ylabel('Conductances')
